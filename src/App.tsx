@@ -1,23 +1,74 @@
 import cloudy from './assets/partlycloudy.png'
-import { DropIcon, SearchIcon, SunIcon, WindIcon } from './icons'
+import heavyrain from './assets/heavyrain.png'
+import {
+  CalendarIcon,
+  DropIcon,
+  LocationIcon,
+  SearchIcon,
+  SunIcon,
+  WindIcon
+} from './Icons'
+import { useEffect, useState } from 'react'
+import useDebounce from './hooks/useDebounce'
+import { getLocations } from './api/weatherApi'
+import { type Locations } from './types'
 
 function App() {
+  const [locations, setLocations] = useState<Locations[]>([])
+  const [search, setSearch] = useState('')
+
+  const handleSearch = () => {
+    if (search.length > 2) {
+      getLocations({ cityName: search }).then((data: Locations[]) => {
+        setLocations(data)
+      })
+    }
+  }
+
+  const searchDebounce = useDebounce(search, 1200)
+
+  useEffect(() => {
+    handleSearch()
+  }, [searchDebounce])
   return (
     <div className="flex items-center justify-center min-h-[100dvh] relative">
       <div className="w-full h-full bg-[url(./assets/bg2.jpg)] bg-cover bg-center bg-no-repeat blur absolute"></div>
-      <main className="mx-2 flex flex-col gap-4 h-[500px] w-[500px] bg-white bg-opacity-10 rounded-lg shadow-lg border border-r-0 border-b-0 border-opacity-30 border-gray-100 p-3 z-10 ">
-        <header className="flex items-center rounded-full bg-white bg-opacity-20">
-          <form className="flex-1">
-            <input
-              type="text"
-              className="w-full h-12 px-4 rounded-lg bg-transparent outline-none placeholder-white"
-              placeholder="Search..."
-              autoComplete="off"
-            />
-          </form>
+      <main className="mx-2 flex flex-col gap-4  w-[500px] bg-white bg-opacity-10 rounded-lg shadow-lg border border-r-0 border-b-0 border-opacity-30 border-gray-100 p-3 z-10 overflow-hidden">
+        <header className="relative flex items-center rounded-full bg-white bg-opacity-20">
+          <input
+            type="text"
+            className="flex-1 h-12 px-4 rounded-lg bg-transparent outline-none placeholder-white"
+            placeholder="Search..."
+            autoComplete="off"
+            onChange={(e) => {
+              setSearch(e.target.value)
+            }}
+            value={search}
+          />
+
           <div className="rounded-full bg-white bg-opacity-30 p-2 m-1">
             <SearchIcon />
           </div>
+          {locations.length > 0 && (
+            <ul className="absolute z-[100] rounded-3xl left-0 overflow-hidden top-[calc(100%_+_0.25em)] bg-black bg-opacity-20 w-full backdrop-blur-sm">
+              {locations.map((location, index) => (
+                <li
+                  key={location.id}
+                  className={`flex items-center gap-4 cursor-pointer px-4 py-2  hover:bg-white hover:bg-opacity-30 transition-colors ${
+                    index === locations.length - 1
+                      ? ''
+                      : 'border-b border-gray-100 border-opacity-30'
+                  }`}
+                >
+                  <LocationIcon />
+                  <p>
+                    {location.name},{' '}
+                    <span className="font-semibold">{location.country}</span>
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
         </header>
         <main>
           <p className="text-white text-center text-2xl font-bold">
@@ -52,6 +103,30 @@ function App() {
             </div>
           </div>
         </main>
+        <footer className="space-y-3">
+          <div className="flex items-center gap-2">
+            <CalendarIcon />
+            <p className="text-white text-base">Daily Forecast</p>
+          </div>
+          <div className="flex gap-x-4 overflow-y-auto">
+            {[...Array(5)].map((_, i) => (
+              <div
+                key={i}
+                className="flex flex-col justify-center items-center rounded-3xl py-3 px-5 bg-white bg-opacity-15 w-max"
+              >
+                <picture className="h-11 w-11">
+                  <img
+                    src={heavyrain}
+                    alt="heavyrain"
+                    className="w-full h-full"
+                  />
+                </picture>
+                <p className="text-white">Monday</p>
+                <p className="text-white text-xl font-semibold">24&#176;</p>
+              </div>
+            ))}
+          </div>
+        </footer>
       </main>
     </div>
   )

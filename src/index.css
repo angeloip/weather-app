@@ -5,3 +5,6 @@
 :root {
   color-scheme: light dark;
 }
+::-webkit-scrollbar {
+  display: none;
+}
