@@ -1,5 +1,3 @@
-import cloudy from './assets/partlycloudy.png'
-import heavyrain from './assets/heavyrain.png'
 import {
   CalendarIcon,
   DropIcon,
@@ -10,11 +8,13 @@ import {
 } from './Icons'
 import { useEffect, useState } from 'react'
 import useDebounce from './hooks/useDebounce'
-import { getLocations } from './api/weatherApi'
-import { type Locations } from './types'
+import { getForecast, getLocations } from './api/weatherApi'
+import { type Weather, type Locations } from './types'
+import { weatherImages } from './constants/constants'
 
 function App() {
   const [locations, setLocations] = useState<Locations[]>([])
+  const [weather, setWeather] = useState<Weather | null>(null)
   const [search, setSearch] = useState('')
 
   const handleSearch = () => {
@@ -23,6 +23,16 @@ function App() {
         setLocations(data)
       })
     }
+  }
+
+  const handleLocation = (location: Locations) => {
+    setSearch('')
+    setLocations([])
+    getForecast({ cityName: location.name, days: '7' }).then(
+      (data: Weather) => {
+        setWeather(data)
+      }
+    )
   }
 
   const searchDebounce = useDebounce(search, 1200)
@@ -59,6 +69,9 @@ function App() {
                       ? ''
                       : 'border-b border-gray-100 border-opacity-30'
                   }`}
+                  onClick={() => {
+                    handleLocation(location)
+                  }}
                 >
                   <LocationIcon />
                   <p>
@@ -70,36 +83,44 @@ function App() {
             </ul>
           )}
         </header>
-        <main>
+        <main className="flex flex-col gap-4">
           <p className="text-white text-center text-2xl font-bold">
-            London,{' '}
+            {weather?.location.name},{' '}
             <span className="text-lg font-semibold text-gray-300">
-              United Kingdom
+              {weather?.location.country}
             </span>
           </p>
-          <picture className="flex justify-center w-full">
-            <img src={cloudy} alt="partylecloudy" className="w-40 h-40" />
+          <picture className="flex w-36 h-36 mx-auto">
+            <img
+              src={weatherImages[weather?.current.condition.text]}
+              alt={weather?.current.condition.text}
+              className="w-full h-full"
+            />
           </picture>
           <div className="space-y-2">
             <p className="text-white text-center text-6xl font-bold">
-              24&#176;
+              {weather?.current.temp_c}&#176;
             </p>
             <p className="text-white text-center text-xl tracking-widest">
-              Partly Cloudy
+              {weather?.current.condition.text}
             </p>
           </div>
           <div className="flex justify-between mx-4 mt-4">
             <div className="flex gap-2 items-center">
               <WindIcon />
-              <p className="text-white font-semibold text-base">5 km/h</p>
+              <p className="text-white font-semibold text-base">
+                {weather?.current.wind_kph}km/h
+              </p>
             </div>
             <div className="flex gap-2 items-center">
               <DropIcon />
-              <p className="text-white font-semibold text-base">5 km/h</p>
+              <p className="text-white font-semibold text-base">
+                {weather?.current.humidity}%
+              </p>
             </div>
             <div className="flex gap-2 items-center">
               <SunIcon />
-              <p className="text-white font-semibold text-base">5 km/h</p>
+              <p className="text-white font-semibold text-base">6 AM</p>
             </div>
           </div>
         </main>
@@ -109,22 +130,28 @@ function App() {
             <p className="text-white text-base">Daily Forecast</p>
           </div>
           <div className="flex gap-x-4 overflow-y-auto">
-            {[...Array(5)].map((_, i) => (
-              <div
-                key={i}
-                className="flex flex-col justify-center items-center rounded-3xl py-3 px-5 bg-white bg-opacity-15 w-max"
-              >
-                <picture className="h-11 w-11">
-                  <img
-                    src={heavyrain}
-                    alt="heavyrain"
-                    className="w-full h-full"
-                  />
-                </picture>
-                <p className="text-white">Monday</p>
-                <p className="text-white text-xl font-semibold">24&#176;</p>
-              </div>
-            ))}
+            {weather?.forecast.forecastday.map((el, i) => {
+              const date = new Date(el.date)
+              const day = date.toLocaleString('en-us', { weekday: 'long' })
+              return (
+                <div
+                  key={i}
+                  className="flex flex-col justify-center items-center rounded-3xl py-3 px-5 bg-white bg-opacity-15 w-max"
+                >
+                  <picture className="h-11 w-11">
+                    <img
+                      src={weatherImages[el.day.condition.text]}
+                      alt={el.day.condition.text}
+                      className="w-full h-full"
+                    />
+                  </picture>
+                  <p className="text-white">{day}</p>
+                  <p className="text-white text-xl font-semibold">
+                    {el.day.avgtemp_c}&#176;
+                  </p>
+                </div>
+              )
+            })}
           </div>
         </footer>
       </main>
