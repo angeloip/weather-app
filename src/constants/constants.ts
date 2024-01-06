@@ -24,4 +24,6 @@ export const weatherImages = {
   'Moderate or heavy rain with thunder': heavyrain,
   Mist: mist,
   other: moderaterain
-}
+} as const
+
+export type WeatherImagesType = keyof typeof weatherImages
