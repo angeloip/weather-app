@@ -8,6 +8,8 @@ interface State {
   setWeather: (weather: Weather) => void
   search: string
   setSearch: (search: string) => void
+  isLoading: boolean
+  setIsLoading: (loading: boolean) => void
 }
 
 export const useWeatherStore = create<State>((set) => ({
@@ -16,5 +18,7 @@ export const useWeatherStore = create<State>((set) => ({
   weather: null,
   setWeather: (weather) => { set({ weather }) },
   search: '',
-  setSearch: (search) => { set({ search }) }
+  setSearch: (search) => { set({ search }) },
+  isLoading: true,
+  setIsLoading: (isLoading) => { set({ isLoading }) }
 }))

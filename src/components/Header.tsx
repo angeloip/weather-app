@@ -3,28 +3,34 @@ import { LocationIcon, SearchIcon } from '../Icons'
 import { getForecast, getLocations } from '../api/weatherApi'
 import useDebounce from '../hooks/useDebounce'
 import { useWeatherStore } from '../store/weatherStore'
-import { type Weather, type Locations } from '../types'
+import { type Locations } from '../types'
 
 export default function Header() {
-  const { search, setSearch, locations, setLocations, setWeather } =
-    useWeatherStore((state) => state)
+  const {
+    search,
+    setSearch,
+    locations,
+    setLocations,
+    setWeather,
+    setIsLoading
+  } = useWeatherStore((state) => state)
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (search.length > 2) {
-      getLocations({ cityName: search }).then((data: Locations[]) => {
-        setLocations(data)
+      await getLocations({ cityName: search }).then((res) => {
+        setLocations(res.data)
       })
     }
   }
 
-  const handleLocation = (location: Locations) => {
+  const handleLocation = async (location: Locations) => {
     setSearch('')
     setLocations([])
-    getForecast({ cityName: location.name, days: '7' }).then(
-      (data: Weather) => {
-        setWeather(data)
-      }
-    )
+    setIsLoading(true)
+    await getForecast({ cityName: location.name, days: '7' }).then((res) => {
+      setWeather(res.data)
+    })
+    setIsLoading(false)
   }
 
   const searchDebounce = useDebounce(search, 1200)
